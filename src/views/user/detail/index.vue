@@ -326,122 +326,17 @@
             </el-card>
         </template>
 
-        <el-dialog
+        <user-free-times-dialog
             v-model="freeTimesDialogVisible"
-            title="编辑免费次数"
-            width="50%"
-            :before-close="handleClose"
-        >
-            <div v-if="editRow" class="user-info ml-5">
-                <img
-                    v-if="editRow.avatar"
-                    class="w-[80px] h-[80px] rounded-full mr-4"
-                    :src="editRow.avatar"
-                />
-                <div class="flex flex-col text-sm text-gray-500 font-bold pt-3">
-                    <p>用户昵称：{{ editRow.nick_name }}</p>
-                    <p>用户ID：{{ editRow.id_number }}</p>
-                    <p>UID：{{ editRow.id }}</p>
-                </div>
-            </div>
-            <p class="ml-5 mt-5">
-                下次免费次数重置时间：{{
-                    dayjs(editRow?.privilege_info?.common_refresh_time).format(
-                        "YYYY-MM-DD HH:mm:ss"
-                    )
-                }}
-            </p>
-            <p class="ml-5 mt-2">
-                剩余消息数：{{ editRow?.privilege_info?.privileges.MESSAGE }}
-            </p>
-            <p class="ml-5 mt-2">
-                剩余图片数：{{ editRow?.privilege_info?.privileges.PHOTO }}
-            </p>
-            <p class="ml-5 mt-2 mb-5">
-                剩余语音数：{{ editRow?.privilege_info?.privileges.VOICE }}
-            </p>
+            :user-info="editRow"
+            @success="onSearch"
+        />
 
-            <el-form
-                ref="freeTimesFormRef"
-                :model="freeTimesForm"
-                :rules="freeTimesRules"
-            >
-                <el-form-item label="赠送消息数" prop="privileges.MESSAGE">
-                    <el-input-number
-                        v-model="freeTimesForm.privileges.MESSAGE"
-                        class="!w-[200px]"
-                    />
-                </el-form-item>
-                <el-form-item label="赠送图片数" prop="privileges.PHOTO">
-                    <el-input-number
-                        v-model="freeTimesForm.privileges.PHOTO"
-                        class="!w-[200px]"
-                    />
-                </el-form-item>
-                <el-form-item label="赠送语音数" prop="privileges.VOICE">
-                    <el-input-number
-                        v-model="freeTimesForm.privileges.VOICE"
-                        class="!w-[200px]"
-                    />
-                </el-form-item>
-            </el-form>
-
-            <template #footer>
-                <el-button @click="handleClose">取消</el-button>
-                <el-button type="primary" @click="handleFreeTimesSave">
-                    保存
-                </el-button>
-            </template>
-        </el-dialog>
-
-        <el-dialog
+        <user-vip-dialog
             v-model="vipDialogVisible"
-            title="编辑会员"
-            width="50%"
-            :before-close="handleClose"
-        >
-            <div v-if="editRow" class="user-info ml-5">
-                <img
-                    v-if="editRow.avatar"
-                    class="w-[80px] h-[80px] rounded-full mr-4"
-                    :src="editRow.avatar"
-                />
-                <div class="flex flex-col text-sm text-gray-500 font-bold pt-3">
-                    <p>用户昵称：{{ editRow.nick_name }}</p>
-                    <p>用户ID：{{ editRow.id_number }}</p>
-                    <p>UID：{{ editRow.id }}</p>
-                </div>
-            </div>
-            <p class="ml-5 mt-5">
-                当前是否为会员：{{
-                    editRow?.privilege_info?.vip.vip ? "是" : "否"
-                }}
-            </p>
-            <p v-if="editRow?.privilege_info?.vip.vip" class="ml-5 mt-2">
-                会员到期时间：{{
-                    dayjs(editRow?.privilege_info?.vip.vip_expire_time).format(
-                        "YYYY-MM-DD HH:mm:ss"
-                    )
-                }}
-            </p>
-            <el-form
-                ref="vipFormRef"
-                :model="vipForm"
-                :rules="vipRules"
-                class="mt-5 ml-5"
-            >
-                <el-form-item label="会员天数" prop="day">
-                    <el-input-number v-model="vipForm.day" class="!w-[200px]" />
-                </el-form-item>
-            </el-form>
-
-            <template #footer>
-                <el-button @click="handleClose">取消</el-button>
-                <el-button type="primary" @click="handleVipSave">
-                    保存
-                </el-button>
-            </template>
-        </el-dialog>
+            :user-info="editRow"
+            @success="onSearch"
+        />
 
         <user-coin-dialog
             v-model="coinDialogVisible"
@@ -476,7 +371,7 @@
 </template>
 <script setup lang="ts">
 import { storageLocal } from "@pureadmin/utils";
-import { ref, nextTick, computed } from "vue";
+import { ref, computed } from "vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useUserDetail } from "./hooks";
 import Refresh from "@iconify-icons/ep/refresh";
@@ -523,11 +418,9 @@ const {
     handleCreateSizeChange,
     handleCreateCurrentChange,
     getCharacterData,
-    createForm,
 
     photoDialog,
     photoData,
-    showPhotoDialog,
 
     recordColumns,
     recordTableLoading,
@@ -535,8 +428,7 @@ const {
     recordPagination,
     handleRecordSizeChange,
     handleRecordCurrentChange,
-    getRecordData,
-    recordForm
+    getRecordData
 } = useUserDetail();
 
 // 设置form的id 从query中获取
@@ -581,30 +473,28 @@ const chatRecordForm = ref({
 
 const openDialog = (type?: string, row?: any) => {
     editRow.value = cloneDeep(userInfo.value);
-    if (type === "freeTimes") {
-        freeTimesDialogVisible.value = true;
-    } else if (type === "vip") {
-        vipDialogVisible.value = true;
-    } else if (type === "coin") {
-        coinDialogVisible.value = true;
-    } else if (type === "label") {
-        labelsDialogVisible.value = true;
-    } else if (type === "type") {
-        typeDialogVisible.value = true;
-    } else if (type === "chatRecord") {
-        chatRecordDialogVisible.value = true;
-        chatRecordForm.value.uid = userInfo.value.id;
-        chatRecordForm.value.character_id = row.id;
+    switch (type) {
+        case "freeTimes":
+            freeTimesDialogVisible.value = true;
+            break;
+        case "vip":
+            vipDialogVisible.value = true;
+            break;
+        case "coin":
+            coinDialogVisible.value = true;
+            break;
+        case "label":
+            labelsDialogVisible.value = true;
+            break;
+        case "type":
+            typeDialogVisible.value = true;
+            break;
+        case "chatRecord":
+            chatRecordDialogVisible.value = true;
+            chatRecordForm.value.uid = userInfo.value.id;
+            chatRecordForm.value.character_id = row.id;
+            break;
     }
-};
-
-const handleClose = () => {
-    freeTimesDialogVisible.value = false;
-    vipDialogVisible.value = false;
-    coinDialogVisible.value = false;
-    labelsDialogVisible.value = false;
-    typeDialogVisible.value = false;
-    photoDialog.value = false;
 };
 </script>
 <style scoped lang="scss">
