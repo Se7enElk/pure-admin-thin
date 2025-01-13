@@ -1,3 +1,9 @@
+<!--
+ * @Author: Elk
+ * @Date: 2025-01-09 18:32:00
+ * @FilePath: /lemon9-admin/src/components/Dialog/User/UserPhotoDialog.vue
+ * @Description: 
+-->
 <template>
     <base-user-dialog
         v-model="visible"
@@ -31,17 +37,25 @@
 import { computed } from "vue";
 import BaseUserDialog from "./BaseUserDialog.vue";
 
+interface PhotoItem {
+    character_id: string;
+    id_number: string;
+    image_url: string;
+    nick_name: string;
+    uid: string;
+    vague_image_url: string;
+}
+
 const props = defineProps({
     modelValue: {
         type: Boolean,
         required: true
     },
     userInfo: {
-        type: Object,
-        required: true
+        type: Object
     },
     photoData: {
-        type: Array,
+        type: Array as PropType<PhotoItem[]>,
         required: true,
         default: () => []
     }

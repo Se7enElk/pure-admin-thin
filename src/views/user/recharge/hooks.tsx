@@ -2,17 +2,21 @@ import dayjs from "dayjs";
 import { reactive, ref, onMounted } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
 import { useUserStoreHook } from "@/store/modules/user";
-import { getUserList } from "@/api/user";
+import { getUserRecord } from "@/api/user";
+import { cloneDeep } from "@pureadmin/utils";
 
 const getEnumNameByValue = useUserStoreHook().getEnumNameByValue;
 export function useUserManage() {
     const form = ref({
         nick_name: "",
         id_number: "",
-        id: "",
-        labels: [],
-        type: "",
-        vip: null,
+        uid: "",
+        order_id: "",
+        out_trade_no: "",
+        status: "",
+        start_time: 0,
+        end_time: 0,
+        time_range: [],
         page: 1,
         size: 20
     });
@@ -29,285 +33,50 @@ export function useUserManage() {
     const total = ref(0);
     const columns: TableColumnList = [
         {
-            label: "UID",
-            prop: "id",
-            width: 90,
-            align: "left"
+            label: "订单ID",
+            prop: "order_id"
         },
         {
-            label: "用户ID",
-            prop: "id_number",
-            minWidth: 90
+            label: "三方订单ID",
+            prop: "out_trade_no"
         },
         {
             label: "用户昵称",
-            minWidth: 120,
             prop: "nick_name"
         },
         {
-            label: "头像",
-            prop: "avatar",
-            minWidth: 120,
-            cellRenderer: ({ row }) => (
-                <el-image
-                    fit="cover"
-                    preview-teleported={true}
-                    src={row.avatar}
-                    preview-src-list={Array.of(row.avatar)}
-                    class="w-[24px] h-[24px] rounded-full align-middle"
-                />
-            ),
-            width: 90
+            label: "用户ID",
+            prop: "id_number"
         },
         {
-            label: "邮箱",
-            prop: "email",
-            width: 120
+            label: "UID",
+            prop: "uid"
         },
         {
-            label: "手机号",
-            prop: "phone",
-            width: 120
+            label: "支付金额",
+            prop: "pay_amount"
         },
         {
-            label: "标签",
-            prop: "labels",
-            width: 120,
-            // 遍历row.labels 每一项使用el-tag包裹
-            cellRenderer: ({ row }) => {
-                if (row.labels && row.labels.length > 0) {
-                    return row.labels.map((label: string) => (
-                        <el-tag key={label}>
-                            {getEnumNameByValue("UserLabel", label)}
-                        </el-tag>
-                    ));
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "创建角色数量",
-            prop: "role_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return <span>{row?.statistics?.character_count}</span>;
-            }
-        },
-        {
-            label: "聊天角色数量",
-            prop: "role_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return <span>{row?.statistics?.character}</span>;
-            }
-        },
-        {
-            label: "生成图片数",
-            prop: "image_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return <span>{row?.statistics?.image_count}</span>;
-            }
-        },
-        {
-            label: "发送消息数量",
-            prop: "message_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return <span>{row?.statistics?.message_count}</span>;
-            }
-        },
-        {
-            label: "会员时间",
-            prop: "vip",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.vip?.vip) {
-                    return (
-                        <span>
-                            <p>会员</p>
-                            {dayjs(
-                                row?.privilege_info?.vip?.vip_expire_time
-                            ).format("YYYY-MM-DD HH:mm:ss")}
-                            <p>到期</p>
-                        </span>
-                    );
-                } else {
-                    return <span>不是会员</span>;
-                }
-            }
-        },
-        {
-            label: "金币数",
-            prop: "coin",
-            minWidth: 120
-        },
-        {
-            label: "剩余普通聊天次数",
-            prop: "normal_chat_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.MESSAGE) {
-                    return (
-                        <span>{row?.privilege_info?.privileges?.MESSAGE}</span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余VIP聊天次数",
-            prop: "vip_chat_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.vip_privileges?.MESSAGE) {
-                    return (
-                        <span>
-                            {row?.privilege_info?.vip_privileges?.MESSAGE}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余普通润色次数",
-            prop: "normal_color_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.POLISH) {
-                    return (
-                        <span>{row?.privilege_info?.privileges?.POLISH}</span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余VIP润色次数",
-            prop: "vip_color_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.vip_privileges?.POLISH) {
-                    return (
-                        <span>
-                            {row?.privilege_info?.vip_privileges?.POLISH}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余普通生图数",
-            prop: "normal_image_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.PHOTO) {
-                    return (
-                        <span>{row?.privilege_info?.privileges?.PHOTO}</span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余VIP生图数",
-            prop: "vip_image_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return (
-                    <span>{row?.privilege_info?.vip_privileges?.PHOTO}</span>
-                );
-            }
-        },
-        {
-            label: "剩余普通解锁图片数",
-            prop: "normal_image_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.UNLOCK_ALBUM) {
-                    return (
-                        <span>
-                            {row?.privilege_info?.privileges?.UNLOCK_ALBUM}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余VIP解锁图片数",
-            prop: "vip_image_count",
-            minWidth: 120,
+            label: "支付时间",
+            prop: "create_time",
             cellRenderer: ({ row }) => {
                 return (
                     <span>
-                        {row?.privilege_info?.vip_privileges?.UNLOCK_ALBUM}
+                        {dayjs(row.create_time).format("YYYY-MM-DD HH:mm:ss")}
                     </span>
                 );
             }
         },
         {
-            label: "剩余普通语音次数",
-            prop: "normal_color_count",
-            minWidth: 120,
+            label: "订单状态",
+            prop: "status",
             cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.VOICE) {
-                    return (
-                        <span>{row?.privilege_info?.privileges?.VOICE}</span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
+                return (
+                    <span>
+                        {getEnumNameByValue("PaymentStatus", row.status)}
+                    </span>
+                );
             }
-        },
-        {
-            label: "剩余VIP语音次数",
-            prop: "vip_voice_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.vip_privileges?.VOICE) {
-                    return (
-                        <span>
-                            {row?.privilege_info?.vip_privileges?.VOICE}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "下次免费次数重置时间",
-            prop: "normal_color_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.common_refresh_time) {
-                    return (
-                        <span>
-                            {dayjs(
-                                row?.privilege_info?.common_refresh_time
-                            ).format("YYYY-MM-DD HH:mm:ss")}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "操作",
-            fixed: "right",
-            width: 200,
-            slot: "operation"
         }
     ];
 
@@ -320,7 +89,17 @@ export function useUserManage() {
     async function onSearch() {
         loading.value = true;
         try {
-            const res = await getUserList(form.value);
+            if (form.value.time_range.length > 0) {
+                form.value.start_time = new Date(
+                    form.value.time_range[0]
+                ).getTime();
+                form.value.end_time = new Date(
+                    form.value.time_range[1]
+                ).getTime();
+            }
+            let options = cloneDeep(form.value);
+            delete options.time_range;
+            const res = await getUserRecord(options);
             if (res.status === 200) {
                 dataList.value = res.data.content;
                 total.value = res.data.total;

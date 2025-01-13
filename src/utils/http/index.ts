@@ -17,7 +17,7 @@ import type {
 } from "./types.d";
 import { stringify } from "qs";
 import NProgress from "../progress";
-import { getToken } from "@/utils/auth";
+import { getToken, removeToken } from "@/utils/auth";
 // import { useUserStore } from "@/store/modules/user";
 import { message } from "@/utils/message";
 
@@ -104,6 +104,16 @@ class PureHttp {
                 // 关闭进度条动画
                 NProgress.done();
                 // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
+
+                // 处理 status = 1005 的情况
+                if (response.data && response.data.status === 1005) {
+                    message("登录已过期，请重新登录", {
+                        type: "error"
+                    });
+                    removeToken();
+                    window.location.href = "/login";
+                    return Promise.reject(response.data);
+                }
 
                 // 处理 status = 500 的情况
                 if (response.data && response.data.status === 500) {

@@ -1,3 +1,9 @@
+<!--
+ * @Author: Elk
+ * @Date: 2025-01-09 18:32:00
+ * @FilePath: /lemon9-admin/src/components/Dialog/User/UserChatRecordDialog.vue
+ * @Description: 
+-->
 <template>
     <base-user-dialog
         v-model="visible"
@@ -43,7 +49,7 @@ const chatRecordData = ref([]);
 
 const getChatRecord = async () => {
     const params = {
-        uid: props.userInfo.id,
+        uid: props.userInfo.id || props.userInfo.uid,
         character_id: props.characterId
     };
 

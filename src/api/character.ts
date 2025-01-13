@@ -71,3 +71,38 @@ export const getCharacterPhoto = (params?: object) => {
         params
     });
 };
+
+/* 删除角色 */
+export const deleteCharacter = (data?: object) => {
+    return http.request<AnyResult>("delete", "/backend/auth/character", {
+        data
+    });
+};
+
+/* 恢复角色 */
+export const recoverCharacter = (data?: object) => {
+    return http.request<AnyResult>("put", "/backend/auth/character/restore", {
+        data
+    });
+};
+
+/* 编辑角色 */
+export const editCharacter = (data?: object) => {
+    return http.request<AnyResult>("put", "/backend/auth/character/edit", {
+        data
+    });
+};
+
+/* 角色详情 */
+export const getCharacterDetail = (params?: object) => {
+    return http.request<AnyResult>("get", "/backend/auth/character/detail", {
+        params
+    });
+};
+
+/* 角色排序 */
+export const sortCharacter = (data?: object) => {
+    return http.request<AnyResult>("put", "/backend/auth/character/position", {
+        data
+    });
+};

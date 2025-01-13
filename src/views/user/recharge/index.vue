@@ -28,24 +28,13 @@
                     class="!w-[180px]"
                 />
             </el-form-item>
-            <el-form-item label="UID：" prop="id">
+            <el-form-item label="UID：" prop="uid">
                 <el-input
-                    v-model="form.id"
+                    v-model="form.uid"
                     placeholder="请输入UID"
                     clearable
                     class="!w-[180px]"
                 />
-            </el-form-item>
-            <el-form-item label="充值类型：" prop="type">
-                <el-select
-                    v-model="form.type"
-                    placeholder="请选择"
-                    clearable
-                    class="!w-[180px]"
-                >
-                    <el-option label="创作者" value="CREATOR" />
-                    <el-option label="普通用户" value="USER" />
-                </el-select>
             </el-form-item>
             <el-form-item label="订单ID：" prop="order_id">
                 <el-input
@@ -55,17 +44,17 @@
                     class="!w-[180px]"
                 />
             </el-form-item>
-            <el-form-item label="三方ID：" prop="third_id">
+            <el-form-item label="三方ID：" prop="out_trade_no">
                 <el-input
-                    v-model="form.third_id"
+                    v-model="form.out_trade_no"
                     placeholder="请输入三方ID"
                     clearable
                     class="!w-[180px]"
                 />
             </el-form-item>
-            <el-form-item label="充值时间：" prop="created_at">
+            <el-form-item label="充值时间：" prop="time_range">
                 <el-date-picker
-                    v-model="form.created_at"
+                    v-model="form.time_range"
                     type="daterange"
                     range-separator="至"
                     start-placeholder="开始日期"
@@ -81,7 +70,12 @@
                     clearable
                     class="!w-[180px]"
                 >
-                    <el-option label="成功" value="SUCCESS" />
+                    <el-option
+                        v-for="item in PaymentStatus"
+                        :key="item.value"
+                        :label="item.name"
+                        :value="item.value"
+                    />
                 </el-select>
             </el-form-item>
             <el-form-item>
@@ -129,28 +123,17 @@
 </template>
 
 <script setup lang="ts">
-import { message } from "@/utils/message";
-import { ref, nextTick } from "vue";
+import { ref } from "vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useUserStoreHook } from "@/store/modules/user";
 import Refresh from "@iconify-icons/ep/refresh";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useUserManage } from "./hooks";
-import dayjs from "dayjs";
-import {
-    addFreeTimes,
-    addVip,
-    coinOperation,
-    banUser,
-    editUser
-} from "@/api/user";
-import { cloneDeep } from "@pureadmin/utils";
 import { useRouter } from "vue-router";
-import { storageLocal } from "@pureadmin/utils";
 
 const router = useRouter();
 const { getEnumOptions } = useUserStoreHook();
-const UserLabel = getEnumOptions("UserLabel");
+const PaymentStatus = getEnumOptions("PaymentStatus");
 const editRow = ref(null);
 
 const {

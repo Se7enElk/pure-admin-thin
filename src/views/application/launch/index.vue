@@ -43,7 +43,7 @@
                 </el-button>
             </el-form-item>
         </el-form>
-        <PureTableBar title="用户管理" :columns="columns" @refresh="onSearch">
+        <PureTableBar title="投放管理" :columns="columns" @refresh="onSearch">
             <template #buttons>
                 <el-button
                     type="primary"
@@ -75,14 +75,13 @@
                     @page-current-change="handleCurrentChange"
                 >
                     <template #operation="{ row }">
-                        <el-button type="primary" text @click="handleEdit(row)">
+                        <el-button type="primary" link @click="handleEdit(row)">
                             编辑
                         </el-button>
                         <el-button
                             v-if="row.status === 0"
                             type="danger"
-                            text
-                            style="margin-left: 0"
+                            link
                             @click="handleStatus(row)"
                         >
                             上架
@@ -90,16 +89,14 @@
                         <el-button
                             v-if="row.status === 1"
                             type="danger"
-                            text
-                            style="margin-left: 0"
+                            link
                             @click="handleStatus(row)"
                         >
                             下架
                         </el-button>
                         <el-button
                             type="danger"
-                            text
-                            style="margin-left: 0"
+                            link
                             @click="deleteBannerDialog(row)"
                         >
                             删除

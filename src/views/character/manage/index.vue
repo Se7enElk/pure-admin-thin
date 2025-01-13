@@ -70,7 +70,7 @@
             </el-form-item>
         </el-form>
 
-        <PureTableBar title="用户管理" :columns="columns" @refresh="onSearch">
+        <PureTableBar title="角色管理" :columns="columns" @refresh="onSearch">
             <template v-slot="{ size, dynamicColumns }">
                 <pure-table
                     ref="tableRef"
@@ -97,11 +97,22 @@
                             link
                             type="primary"
                             :size="size"
-                            @click="toUserDetails(row)"
+                            @click="toCharacterDetails(row)"
                         >
-                            用户详情
+                            角色详情
                         </el-button>
                         <el-button
+                            v-if="row.status === 'DELETED'"
+                            class="reset-margin"
+                            link
+                            type="success"
+                            :size="size"
+                            @click="openDialog(row, 'recover')"
+                        >
+                            恢复
+                        </el-button>
+                        <el-button
+                            v-else
                             class="reset-margin"
                             link
                             type="danger"
@@ -115,202 +126,51 @@
             </template>
         </PureTableBar>
 
-        <el-dialog
-            v-model="freeTimesDialogVisible"
-            title="编辑免费次数"
-            width="50%"
-            :before-close="handleClose"
-        >
-            <div v-if="editRow" class="user-info ml-5">
-                <img
-                    v-if="editRow.avatar"
-                    class="w-[80px] h-[80px] rounded-full mr-4"
-                    :src="editRow.avatar"
-                />
-                <div class="flex flex-col text-sm text-gray-500 font-bold pt-3">
-                    <p>用户昵称：{{ editRow.nick_name }}</p>
-                    <p>用户ID：{{ editRow.id_number }}</p>
-                    <p>UID：{{ editRow.id }}</p>
-                </div>
-            </div>
-            <p class="ml-5 mt-5">
-                下次免费次数重置时间：{{
-                    dayjs(editRow?.privilege_info?.common_refresh_time).format(
-                        "YYYY-MM-DD HH:mm:ss"
-                    )
-                }}
-            </p>
-            <p class="ml-5 mt-2">
-                剩余消息数：{{ editRow?.privilege_info?.privileges.MESSAGE }}
-            </p>
-            <p class="ml-5 mt-2">
-                剩余图片数：{{ editRow?.privilege_info?.privileges.PHOTO }}
-            </p>
-            <p class="ml-5 mt-2 mb-5">
-                剩余语音数：{{ editRow?.privilege_info?.privileges.VOICE }}
-            </p>
-            <p class="ml-5 mt-2 mb-5">
-                剩余润色次数：{{ editRow?.privilege_info?.privileges?.POLISH }}
-            </p>
-            <p class="ml-5 mt-2 mb-5">
-                剩余生图次数：{{ editRow?.privilege_info?.privileges?.PHOTO }}
-            </p>
+        <user-photo-dialog v-model="photoDialog" :photo-data="photoData" />
 
-            <!-- :rules="freeTimesRules" -->
-            <el-form ref="freeTimesFormRef" :model="freeTimesForm">
-                <el-form-item label="赠送消息数" prop="privileges.MESSAGE">
-                    <el-input-number
-                        v-model="freeTimesForm.privileges.MESSAGE"
-                        class="!w-[200px]"
-                    />
-                </el-form-item>
-                <el-form-item label="赠送图片数" prop="privileges.PHOTO">
-                    <el-input-number
-                        v-model="freeTimesForm.privileges.PHOTO"
-                        class="!w-[200px]"
-                    />
-                </el-form-item>
-                <el-form-item label="赠送语音数" prop="privileges.VOICE">
-                    <el-input-number
-                        v-model="freeTimesForm.privileges.VOICE"
-                        class="!w-[200px]"
-                    />
-                </el-form-item>
-                <el-form-item label="赠送润色次数" prop="privileges.POLISH">
-                    <el-input-number
-                        v-model="freeTimesForm.privileges.POLISH"
-                        class="!w-[200px]"
-                    />
-                </el-form-item>
-                <el-form-item
-                    label="赠送解锁图片次数"
-                    prop="privileges.UNLOCK_ALBUM"
-                >
-                    <el-input-number
-                        v-model="freeTimesForm.privileges.UNLOCK_ALBUM"
-                        class="!w-[200px]"
-                    />
-                </el-form-item>
-            </el-form>
+        <character-delete-dialog
+            v-model="deleteDialog"
+            :character-info="editRow"
+            @success="onSearch"
+        />
 
-            <template #footer>
-                <el-button @click="handleClose">取消</el-button>
-                <el-button type="primary" @click="handleFreeTimesSave">
-                    保存
-                </el-button>
-            </template>
-        </el-dialog>
+        <character-recover-dialog
+            v-model="recoverDialog"
+            :character-info="editRow"
+            @success="onSearch"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
-import { message } from "@/utils/message";
-import { ref, nextTick } from "vue";
+import { ref } from "vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useUserStoreHook } from "@/store/modules/user";
 import Refresh from "@iconify-icons/ep/refresh";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useUserManage } from "./hooks";
-import dayjs from "dayjs";
-import {
-    addFreeTimes,
-    addVip,
-    coinOperation,
-    banUser,
-    editUser
-} from "@/api/user";
-import { cloneDeep } from "@pureadmin/utils";
 import { useRouter } from "vue-router";
-import { storageLocal } from "@pureadmin/utils";
+import UserPhotoDialog from "@/components/Dialog/User/UserPhotoDialog.vue";
+import CharacterDeleteDialog from "@/components/Dialog/Character/CharacterDeleteDialog.vue";
+import CharacterRecoverDialog from "@/components/Dialog/Character/CharacterRecoverDialog.vue";
 
 const router = useRouter();
-const { getEnumOptions } = useUserStoreHook();
-const UserLabel = getEnumOptions("UserLabel");
 const editRow = ref(null);
+
+const deleteDialog = ref(false);
+const recoverDialog = ref(false);
 const openDialog = (row: any, type?: string) => {
+    console.log(row);
     editRow.value = row;
-    if (type === "freeTimes") {
-        editRow.value = cloneDeep(row);
-        freeTimesForm.value = {
-            uid: row.id,
-            privileges: {
-                POLISH: 0,
-                UNLOCK_ALBUM: 0,
-                VOICE: 0,
-                PHOTO: 0,
-                MESSAGE: 0
-            },
-            month: row.privilege_info.month
-        };
-        freeTimesDialogVisible.value = true;
+    if (type === "delete") {
+        deleteDialog.value = true;
+    } else if (type === "recover") {
+        recoverDialog.value = true;
     }
 };
-
-const handleClose = () => {
-    freeTimesDialogVisible.value = false;
-};
-
-const freeTimesForm = ref({
-    month: "",
-    privileges: {
-        POLISH: 0,
-        UNLOCK_ALBUM: 0,
-        VOICE: 0,
-        PHOTO: 0,
-        MESSAGE: 0
-    },
-    uid: ""
-});
-
-const freeTimesRules = {
-    "privileges.MESSAGE": [
-        { required: true, message: "请输入赠送消息数", trigger: "blur" }
-    ],
-    "privileges.PHOTO": [
-        { required: true, message: "请输入赠送图片数", trigger: "blur" }
-    ],
-    "privileges.VOICE": [
-        { required: true, message: "请输入赠送语音数", trigger: "blur" }
-    ]
-};
-
-const freeTimesDialogVisible = ref(false);
-const freeTimesFormRef = ref(null);
-const handleFreeTimesSave = async () => {
-    try {
-        // 表单校验
-        const valid = await freeTimesFormRef.value.validate();
-        if (!valid) return;
-        const res = await addFreeTimes(freeTimesForm.value);
-        if (res.status === 200) {
-            message("添加特权次数成功", {
-                type: "success"
-            });
-            freeTimesDialogVisible.value = false;
-            onSearch();
-            nextTick(() => {
-                editRow.value = null;
-                freeTimesForm.value = {
-                    uid: "",
-                    privileges: {
-                        POLISH: 0,
-                        UNLOCK_ALBUM: 0,
-                        VOICE: 0,
-                        PHOTO: 0,
-                        MESSAGE: 0
-                    },
-                    month: ""
-                };
-            });
-        }
-    } catch (error) {
-        console.log(error);
-    }
-};
-const toUserDetails = (row: any) => {
-    storageLocal().setItem("userInfo", row);
+const toCharacterDetails = (row: any) => {
     router.push({
-        path: "/user/detail",
+        path: "/character/detail",
         query: { id: row.id }
     });
 };
@@ -325,7 +185,10 @@ const {
     columns,
     pagination,
     handleSizeChange,
-    handleCurrentChange
+    handleCurrentChange,
+    photoDialog,
+    photoData,
+    showPhotoDialog
 } = useUserManage();
 </script>
 

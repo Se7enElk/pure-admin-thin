@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import BaseUserDialog from "./BaseUserDialog.vue";
 import { editUser } from "@/api/user";
 import { message } from "@/utils/message";
@@ -60,6 +60,16 @@ const form = ref({
     labels: [],
     type: ""
 });
+
+watch(
+    () => props.userInfo,
+    newVal => {
+        if (newVal) {
+            form.value.labels = newVal.labels || [];
+        }
+    },
+    { immediate: true }
+);
 
 const rules = {
     labels: [{ required: true, message: "请选择标签", trigger: "blur" }]

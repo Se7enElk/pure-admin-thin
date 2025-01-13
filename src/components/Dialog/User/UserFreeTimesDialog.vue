@@ -19,11 +19,16 @@
         <p class="ml-5 mt-2">
             剩余图片数：{{ userInfo?.privilege_info?.privileges.PHOTO }}
         </p>
-        <p class="ml-5 mt-2 mb-5">
+        <p class="ml-5 mt-2">
             剩余语音数：{{ userInfo?.privilege_info?.privileges.VOICE }}
         </p>
-        <p class="ml-5 mt-2 mb-5">
+        <p class="ml-5 mt-2">
             剩余润色次数：{{ userInfo?.privilege_info?.privileges?.POLISH }}
+        </p>
+        <p class="ml-5 mt-2 mb-5">
+            剩余解锁图片次数：{{
+                userInfo?.privilege_info?.privileges?.UNLOCK_ALBUM
+            }}
         </p>
 
         <el-form ref="formRef" :model="form" :rules="rules">

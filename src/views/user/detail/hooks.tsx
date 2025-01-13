@@ -9,6 +9,8 @@ import {
 } from "@/api/character";
 import type { TabsPaneContext } from "element-plus";
 import { message } from "@/utils/message";
+import { useUserStoreHook } from "@/store/modules/user";
+const getEnumNameByValue = useUserStoreHook().getEnumNameByValue;
 
 // 首先定义用户信息的接口
 interface UserInfo {
@@ -431,14 +433,21 @@ export function useUserDetail() {
         },
         {
             label: "订单状态",
-            prop: "status"
+            prop: "status",
+            cellRenderer: ({ row }) => {
+                return (
+                    <span>
+                        {getEnumNameByValue("PaymentStatus", row.status)}
+                    </span>
+                );
+            }
         }
     ];
 
     const recordForm = ref({
         page: 1,
         size: 20,
-        id: ""
+        uid: ""
     });
     const recordTableLoading = ref(false);
     const recordData = ref([]);
@@ -464,7 +473,7 @@ export function useUserDetail() {
 
     async function getRecordData() {
         recordTableLoading.value = true;
-        recordForm.value.id = userInfo.value.id;
+        recordForm.value.uid = userInfo.value.id;
         try {
             const res = await getUserRecord(recordForm.value);
             if (res.status === 200) {

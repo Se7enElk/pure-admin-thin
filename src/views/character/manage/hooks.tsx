@@ -1,10 +1,8 @@
-import dayjs from "dayjs";
 import { reactive, ref, onMounted } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
-import { useUserStoreHook } from "@/store/modules/user";
-import { getUserList } from "@/api/user";
+import { getCharacterList, getCharacterPhoto } from "@/api/character";
+import { message } from "@/utils/message";
 
-const getEnumNameByValue = useUserStoreHook().getEnumNameByValue;
 export function useUserManage() {
     const form = ref({
         character_name: "",
@@ -28,279 +26,93 @@ export function useUserManage() {
     const total = ref(0);
     const columns: TableColumnList = [
         {
-            label: "UID",
+            label: "角色ID",
             prop: "id",
             width: 90,
             align: "left"
         },
         {
-            label: "用户ID",
-            prop: "id_number",
+            label: "角色头像",
+            prop: "avatars",
+            minWidth: 180,
+            cellRenderer: ({ row }) => {
+                if (row.avatars && row.avatars.length > 0) {
+                    return (
+                        // 固定高度80px
+                        <el-image
+                            fit="cover"
+                            preview-teleported={true}
+                            src={row.avatars[0]}
+                            preview-src-list={Array.of(row.avatars[0])}
+                            class="w-[80px] h-[80px] rounded-full align-middle"
+                        />
+                    );
+                } else {
+                    return <span>无</span>;
+                }
+            }
+        },
+        {
+            label: "角色名称",
+            prop: "character_name",
             minWidth: 90
         },
         {
-            label: "用户昵称",
+            label: "创建人UID",
             minWidth: 120,
-            prop: "nick_name"
+            prop: "uid"
         },
         {
-            label: "头像",
-            prop: "avatar",
+            label: "创建人用户ID",
             minWidth: 120,
-            cellRenderer: ({ row }) => (
-                <el-image
-                    fit="cover"
-                    preview-teleported={true}
-                    src={row.avatar}
-                    preview-src-list={Array.of(row.avatar)}
-                    class="w-[24px] h-[24px] rounded-full align-middle"
-                />
-            ),
-            width: 90
+            prop: "id_number"
         },
         {
-            label: "邮箱",
-            prop: "email",
+            label: "创建人昵称",
+            minWidth: 120,
+            prop: "creator_name"
+        },
+        {
+            label: "发消息人数",
+            prop: "chat_uv",
             width: 120
         },
         {
-            label: "手机号",
-            prop: "phone",
-            width: 120
-        },
-        {
-            label: "标签",
-            prop: "labels",
+            label: "角色照片",
+            prop: "character_album_count",
             width: 120,
-            // 遍历row.labels 每一项使用el-tag包裹
             cellRenderer: ({ row }) => {
-                if (row.labels && row.labels.length > 0) {
-                    return row.labels.map((label: string) => (
-                        <el-tag key={label}>
-                            {getEnumNameByValue("UserLabel", label)}
-                        </el-tag>
-                    ));
-                } else {
-                    return <span>无</span>;
-                }
+                return (
+                    <el-button
+                        link
+                        type="primary"
+                        size="small"
+                        onClick={() => showPhotoDialog(row.id)}
+                    >
+                        {row.character_album_count}
+                    </el-button>
+                );
             }
         },
         {
-            label: "创建角色数量",
-            prop: "role_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return <span>{row?.statistics?.character_count}</span>;
-            }
-        },
-        {
-            label: "聊天角色数量",
-            prop: "role_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return <span>{row?.statistics?.character}</span>;
-            }
-        },
-        {
-            label: "生成图片数",
-            prop: "image_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return <span>{row?.statistics?.image_count}</span>;
-            }
-        },
-        {
-            label: "发送消息数量",
-            prop: "message_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return <span>{row?.statistics?.message_count}</span>;
-            }
-        },
-        {
-            label: "会员时间",
-            prop: "vip",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.vip?.vip) {
-                    return (
-                        <span>
-                            <p>会员</p>
-                            {dayjs(
-                                row?.privilege_info?.vip?.vip_expire_time
-                            ).format("YYYY-MM-DD HH:mm:ss")}
-                            <p>到期</p>
-                        </span>
-                    );
-                } else {
-                    return <span>不是会员</span>;
-                }
-            }
-        },
-        {
-            label: "金币数",
-            prop: "coin",
+            label: "收到消息数",
+            prop: "chat_count",
             minWidth: 120
         },
         {
-            label: "剩余普通聊天次数",
-            prop: "normal_chat_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.MESSAGE) {
-                    return (
-                        <span>{row?.privilege_info?.privileges?.MESSAGE}</span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
+            label: "生成图片人数",
+            prop: "image_uv",
+            minWidth: 120
         },
         {
-            label: "剩余VIP聊天次数",
-            prop: "vip_chat_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.vip_privileges?.MESSAGE) {
-                    return (
-                        <span>
-                            {row?.privilege_info?.vip_privileges?.MESSAGE}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
+            label: "生成语音人数",
+            prop: "voice_uv",
+            minWidth: 120
         },
         {
-            label: "剩余普通润色次数",
-            prop: "normal_color_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.POLISH) {
-                    return (
-                        <span>{row?.privilege_info?.privileges?.POLISH}</span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余VIP润色次数",
-            prop: "vip_color_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.vip_privileges?.POLISH) {
-                    return (
-                        <span>
-                            {row?.privilege_info?.vip_privileges?.POLISH}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余普通生图数",
-            prop: "normal_image_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.PHOTO) {
-                    return (
-                        <span>{row?.privilege_info?.privileges?.PHOTO}</span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余VIP生图数",
-            prop: "vip_image_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return (
-                    <span>{row?.privilege_info?.vip_privileges?.PHOTO}</span>
-                );
-            }
-        },
-        {
-            label: "剩余普通解锁图片数",
-            prop: "normal_image_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.UNLOCK_ALBUM) {
-                    return (
-                        <span>
-                            {row?.privilege_info?.privileges?.UNLOCK_ALBUM}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余VIP解锁图片数",
-            prop: "vip_image_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                return (
-                    <span>
-                        {row?.privilege_info?.vip_privileges?.UNLOCK_ALBUM}
-                    </span>
-                );
-            }
-        },
-        {
-            label: "剩余普通语音次数",
-            prop: "normal_color_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.privileges?.VOICE) {
-                    return (
-                        <span>{row?.privilege_info?.privileges?.VOICE}</span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "剩余VIP语音次数",
-            prop: "vip_voice_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.vip_privileges?.VOICE) {
-                    return (
-                        <span>
-                            {row?.privilege_info?.vip_privileges?.VOICE}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
-        },
-        {
-            label: "下次免费次数重置时间",
-            prop: "normal_color_count",
-            minWidth: 120,
-            cellRenderer: ({ row }) => {
-                if (row?.privilege_info?.common_refresh_time) {
-                    return (
-                        <span>
-                            {dayjs(
-                                row?.privilege_info?.common_refresh_time
-                            ).format("YYYY-MM-DD HH:mm:ss")}
-                        </span>
-                    );
-                } else {
-                    return <span>无</span>;
-                }
-            }
+            label: "生成语音数",
+            prop: "voice_count",
+            minWidth: 120
         },
         {
             label: "操作",
@@ -319,7 +131,7 @@ export function useUserManage() {
     async function onSearch() {
         loading.value = true;
         try {
-            const res = await getUserList(form.value);
+            const res = await getCharacterList(form.value);
             if (res.status === 200) {
                 dataList.value = res.data.content;
                 total.value = res.data.total;
@@ -346,6 +158,24 @@ export function useUserManage() {
         onSearch();
     };
 
+    const photoDialog = ref(false);
+    const photoData = ref([]);
+    const showPhotoDialog = async (id: string) => {
+        const res = await getCharacterPhoto({ character_id: id });
+        if (res.status === 200) {
+            if (res.data?.length) {
+                photoData.value = res.data;
+                photoDialog.value = true;
+            } else {
+                photoData.value = [];
+
+                message("角色相册为空", {
+                    type: "warning"
+                });
+            }
+        }
+    };
+
     onMounted(() => {
         onSearch();
     });
@@ -362,6 +192,10 @@ export function useUserManage() {
         resetForm,
         pagination,
         handleSizeChange,
-        handleCurrentChange
+        handleCurrentChange,
+
+        photoDialog,
+        photoData,
+        showPhotoDialog
     };
 }

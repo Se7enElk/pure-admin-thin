@@ -7,7 +7,7 @@
 // import { $t } from "@/plugins/i18n";
 
 export default {
-    path: "/user",
+    path: "/launch",
     redirect: "/application/launch",
     meta: {
         icon: "ri:table-line",

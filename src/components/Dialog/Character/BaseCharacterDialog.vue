@@ -1,7 +1,7 @@
 <!--
  * @Author: Elk
  * @Date: 2025-01-09 18:48:07
- * @FilePath: /lemon9-admin/src/components/Dialog/User/BaseUserDialog.vue
+ * @FilePath: /lemon9-admin/src/components/Dialog/Character/BaseCharacterDialog.vue
  * @Description: 
 -->
 <template>
@@ -12,19 +12,21 @@
         :before-close="handleClose"
     >
         <!-- Common User Info Header -->
-        <div v-if="userInfo" class="user-info ml-5">
+        <div v-if="characterInfo && showInfo" class="user-info ml-5">
             <img
-                v-if="userInfo.avatar"
+                v-if="characterInfo.avatars && characterInfo.avatars.length > 0"
                 class="w-[80px] h-[80px] rounded-full mr-4"
-                :src="userInfo.avatar"
+                :src="characterInfo.avatars[0]"
             />
             <div
-                v-if="userInfo.id"
-                class="flex flex-col text-sm text-gray-500 font-bold pt-3"
+                v-if="characterInfo.id || characterInfo.character_id"
+                class="flex flex-col text-sm text-gray-500 font-bold pt-2"
             >
-                <p>用户昵称：{{ userInfo.nick_name }}</p>
-                <p>用户ID：{{ userInfo.id_number }}</p>
-                <p>UID：{{ userInfo.id }}</p>
+                <p class="mb-1">角色名称：{{ characterInfo.character_name }}</p>
+                <p class="mb-1">
+                    角色ID：{{ characterInfo.id || characterInfo.character_id }}
+                </p>
+                <p>角色性别：{{ characterInfo.character_gender }}</p>
             </div>
         </div>
 
@@ -51,8 +53,12 @@ const props = defineProps({
         type: String,
         required: true
     },
-    userInfo: {
+    characterInfo: {
         type: Object
+    },
+    showInfo: {
+        type: Boolean,
+        default: true
     }
 });
 

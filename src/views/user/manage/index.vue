@@ -240,7 +240,27 @@ import UserTypeDialog from "@/components/Dialog/User/UserTypeDialog.vue";
 const router = useRouter();
 const { getEnumOptions } = useUserStoreHook();
 const UserLabel = getEnumOptions("UserLabel");
-const editRow = ref(null);
+const editRow = ref({
+    privilege_info: {
+        privileges: {},
+        vip_privileges: {},
+        vip: { vip: false },
+        common_refresh_time: ""
+    },
+    labels: [],
+    coin: 0,
+    nick_name: "",
+    id_number: "",
+    id: "",
+    type: "",
+    statistics: {
+        character_count: 0,
+        character: 0,
+        message_count: 0,
+        image_count: 0,
+        tts_count: 0
+    }
+});
 
 // Dialog visibility states
 const freeTimesDialogVisible = ref(false);
