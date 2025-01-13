@@ -88,9 +88,10 @@ const mockData = {
     }
 };
 
-// Override the API function to return mock data
-const originalGetCharacterChatRecord = getCharacterChatRecord;
-getCharacterChatRecord = async () => mockData;
+// Mock the API response for testing
+vi.mock("@/api/character", () => ({
+    getCharacterChatRecord: vi.fn().mockResolvedValue(mockData)
+}));
 
 onMounted(() => {
     visible.value = true;

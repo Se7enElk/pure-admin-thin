@@ -14,7 +14,7 @@
     >
         <!-- Dialog Header Info -->
         <div
-            class="flex justify-between items-start px-6 py-5 border-b border-gray-100"
+            class="flex justify-between items-start px-6 py-5 border-b border-gray-100 bg-white"
         >
             <div class="flex flex-col">
                 <div class="text-[15px] font-medium text-gray-900">

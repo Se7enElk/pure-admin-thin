@@ -16,12 +16,12 @@
             <div
                 v-for="item in chatRecordData"
                 :key="item.record_id"
-                class="my-8 first:mt-0 last:mb-0"
+                class="my-8 first:mt-4 last:mb-4"
             >
                 <div v-if="hasUserContent(item)" class="relative my-4">
                     <div class="flex flex-row-reverse items-start gap-3">
                         <div
-                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm text-gray-600 border border-blue-100"
+                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f0f9ff] text-sm text-gray-600 border border-[#e5f3ff]"
                         >
                             用户
                         </div>
@@ -44,7 +44,7 @@
                 <div v-if="hasCharacterContent(item)" class="relative my-4">
                     <div class="flex items-start gap-3">
                         <div
-                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-50 text-sm text-gray-600 border border-gray-200"
+                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm text-gray-600 border border-gray-200"
                         >
                             角色
                         </div>
@@ -133,7 +133,6 @@ const hasCharacterContent = (item: ChatRecord): boolean => {
 };
 
 const renderMixedContent = (item: ChatRecord, context: "input" | "reply") => {
-    const nodes: any[] = [];
     const isReply = context === "reply";
     const bubbleClass = isReply ? "character" : "user";
 
@@ -149,7 +148,7 @@ const renderMixedContent = (item: ChatRecord, context: "input" | "reply") => {
                 {
                     class: `w-full break-words rounded-xl p-3 shadow-sm ${
                         bubbleClass === "user"
-                            ? "bg-blue-50 border border-blue-200"
+                            ? "bg-[#f0f9ff] border border-[#e5f3ff]"
                             : "bg-white border border-gray-200"
                     }`
                 },
@@ -185,12 +184,25 @@ const renderMixedContent = (item: ChatRecord, context: "input" | "reply") => {
                     h("audio", {
                         src: item.reply_tts_audio,
                         controls: true,
-                        class: "hidden"
+                        class: "hidden",
+                        id: `audio-${item.record_id}`
                     }),
                     h(
-                        "span",
+                        "button",
                         {
-                            class: "flex items-center justify-center rounded-xl px-5 py-2.5 text-sm text-white bg-[#4096ff] hover:bg-[#4096ff]/90 transition-colors cursor-pointer"
+                            class: "flex items-center justify-center rounded-xl px-5 py-2.5 text-sm text-white bg-[#4096ff] hover:bg-[#4096ff]/90 transition-colors cursor-pointer shadow-sm",
+                            onClick: () => {
+                                const audio = document.querySelector(
+                                    `#audio-${item.record_id}`
+                                ) as HTMLAudioElement;
+                                if (audio) {
+                                    if (audio.paused) {
+                                        audio.play();
+                                    } else {
+                                        audio.pause();
+                                    }
+                                }
+                            }
                         },
                         "播放语音"
                     )
