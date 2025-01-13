@@ -12,31 +12,26 @@
         :before-close="handleClose"
         class="chat-record-dialog"
     >
-        <!-- Common User Info Header -->
-        <div v-if="userInfo" class="user-info ml-5">
-            <img
-                v-if="userInfo.avatar"
-                class="w-[80px] h-[80px] rounded-full mr-4"
-                :src="userInfo.avatar"
-            />
-            <div
-                v-if="userInfo.id"
-                class="flex flex-col text-sm text-gray-500 font-bold pt-3"
-            >
-                <p>用户昵称：{{ userInfo.nick_name }}</p>
-                <p>用户ID：{{ userInfo.id_number }}</p>
-                <p>UID：{{ userInfo.id }}</p>
+        <!-- Dialog Header Info -->
+        <div
+            class="flex justify-between items-start px-6 py-4 border-b border-gray-100"
+        >
+            <div class="flex flex-col">
+                <div class="text-base font-medium">角色名称</div>
+                <div class="text-sm text-gray-500 mt-1">
+                    角色ID: {{ characterId }}
+                </div>
+            </div>
+            <div class="flex flex-col">
+                <div class="text-base font-medium">用户</div>
+                <div class="text-sm text-gray-500 mt-1">
+                    UID: {{ userInfo?.id || userInfo?.uid }}
+                </div>
             </div>
         </div>
 
         <!-- Slot for dialog-specific content -->
         <slot />
-
-        <!-- Common Footer -->
-        <template #footer>
-            <el-button @click="handleClose">取消</el-button>
-            <el-button type="primary" @click="handleSave"> 保存 </el-button>
-        </template>
     </el-dialog>
 </template>
 
@@ -73,8 +68,6 @@ const handleSave = () => {
 };
 </script>
 
-<style scoped lang="scss">
-.user-info {
-    display: flex;
-}
+<style>
+/* All styles converted to Tailwind utility classes */
 </style>

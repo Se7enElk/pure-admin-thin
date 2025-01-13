@@ -9,17 +9,60 @@
         v-model="visible"
         title="聊天记录"
         :user-info="userInfo"
+        class="overflow-hidden"
         @close="handleClose"
     >
-        <div class="chat-container">
-            <div v-for="item in chatRecordData" :key="item.record_id" class="chat-record-item">
-                <div v-if="item.input" class="user-message">
-                    <component :is="renderMessageBubble(item)" />
-                    <div class="timestamp text-xs text-gray-400">{{ formatTime(item.input_time) }}</div>
+        <div class="h-[60vh] px-6 py-4 overflow-y-auto bg-gray-50">
+            <div
+                v-for="item in chatRecordData"
+                :key="item.record_id"
+                class="my-6 first:mt-0 last:mb-0"
+            >
+                <div v-if="hasUserContent(item)" class="relative my-3">
+                    <div class="flex flex-row-reverse items-start gap-4">
+                        <div
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs text-gray-600"
+                        >
+                            用户
+                        </div>
+                        <div class="flex max-w-[70%] flex-col gap-2">
+                            <template
+                                v-for="(part, idx) in renderMixedContent(
+                                    item,
+                                    'input'
+                                )"
+                                :key="idx"
+                            >
+                                <component :is="part" />
+                            </template>
+                        </div>
+                    </div>
+                    <div class="mt-1 pr-2 text-right text-xs text-gray-400">
+                        {{ formatTime(item.input_time) }}
+                    </div>
                 </div>
-                <div v-if="item.reply" class="character-message">
-                    <component :is="renderReplyBubble(item)" />
-                    <div class="timestamp text-xs text-gray-400">{{ formatTime(item.reply_time) }}</div>
+                <div v-if="hasCharacterContent(item)" class="relative my-3">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs text-gray-600"
+                        >
+                            角色
+                        </div>
+                        <div class="flex max-w-[70%] flex-col gap-2">
+                            <template
+                                v-for="(part, idx) in renderMixedContent(
+                                    item,
+                                    'reply'
+                                )"
+                                :key="idx"
+                            >
+                                <component :is="part" />
+                            </template>
+                        </div>
+                    </div>
+                    <div class="mt-1 pl-2 text-xs text-gray-400">
+                        {{ formatTime(item.reply_time) }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -81,52 +124,82 @@ const visible = computed({
 
 const chatRecordData = ref<ChatRecord[]>([]);
 
-const renderMessageBubble = (item: ChatRecord) => {
-    switch (item.input_type) {
-        case "TEXT":
-            return h("div", { class: "bubble user" }, item.input);
-        case "IMAGE":
-            return h("img", {
-                class: "bubble-image user",
-                src: item.input_url,
-                alt: "User Image"
-            });
-        case "AUDIO":
-            return h("div", { class: "bubble-audio user" }, [
-                h("audio", {
-                    src: item.input_url,
-                    controls: true,
-                    class: "audio-player"
-                }),
-                h("span", { class: "play-icon" }, "▶")
-            ]);
-        default:
-            return h("div", { class: "bubble user" }, item.input);
-    }
+const hasUserContent = (item: ChatRecord): boolean => {
+    return Boolean(item.input || item.input_url);
 };
 
-const renderReplyBubble = (item: ChatRecord) => {
-    switch (item.reply_type) {
-        case "TEXT":
-            return h("div", { class: "bubble character" }, item.reply);
-        case "IMAGE":
-            return h("img", {
-                class: "bubble-image character",
-                src: item.reply_url,
-                alt: "Character Image"
-            });
-        case "AUDIO":
-            return h("div", { class: "bubble-audio character" }, [
-                h("audio", {
-                    src: item.reply_tts_audio || item.reply_url,
-                    controls: true,
-                    class: "audio-player"
-                }),
-                h("span", { class: "play-icon" }, "▶")
-            ]);
-        default:
-            return h("div", { class: "bubble character" }, item.reply);
+const hasCharacterContent = (item: ChatRecord): boolean => {
+    return Boolean(item.reply || item.reply_url || item.reply_tts_audio);
+};
+
+const renderMixedContent = (item: ChatRecord, context: "input" | "reply") => {
+    const nodes: any[] = [];
+    const isReply = context === "reply";
+    const bubbleClass = isReply ? "character" : "user";
+
+    const contentWrapper = h("div", {
+        class: `flex flex-col gap-2 ${bubbleClass === "user" ? "ml-auto" : "mr-auto"}`
+    });
+
+    // Add text content if present
+    if (isReply ? item.reply : item.input) {
+        contentWrapper.children.push(
+            h(
+                "div",
+                {
+                    class: `w-full break-words rounded-xl p-3 shadow-sm ${
+                        bubbleClass === "user"
+                            ? "bg-blue-50 border border-blue-200"
+                            : "bg-white border border-gray-200"
+                    }`
+                },
+                isReply ? item.reply : item.input
+            )
+        );
     }
+
+    // Add image content if present
+    if (isReply ? item.reply_url : item.input_url) {
+        contentWrapper.children.push(
+            h("img", {
+                class: `max-w-[70%] rounded-xl shadow-sm ${
+                    bubbleClass === "user" ? "ml-auto" : "mr-auto"
+                }`,
+                src: isReply ? item.reply_url : item.input_url,
+                alt: isReply ? "Character Image" : "User Image"
+            })
+        );
+    }
+
+    // Add audio content if present (only for replies)
+    if (isReply && item.reply_tts_audio) {
+        contentWrapper.children.push(
+            h(
+                "div",
+                {
+                    class: `flex max-w-[70%] items-center gap-2 rounded-xl bg-white p-3 shadow-sm ${
+                        bubbleClass === "user" ? "ml-auto" : "mr-auto"
+                    }`
+                },
+                [
+                    h("audio", {
+                        src: item.reply_tts_audio,
+                        controls: true,
+                        class: "hidden"
+                    }),
+                    h(
+                        "span",
+                        {
+                            class: "flex items-center justify-center rounded px-4 py-2 text-sm text-white bg-blue-500 cursor-pointer"
+                        },
+                        "播放语音"
+                    )
+                ]
+            )
+        );
+    }
+
+    return [contentWrapper];
 };
 
 const getChatRecord = async () => {
@@ -156,96 +229,9 @@ const handleClose = () => {
 };
 </script>
 
-<style scoped lang="scss">
-.chat-container {
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 1rem;
-}
-
-.chat-record-item {
-    margin: 1.5rem 0;
-}
-
-.user-message, .character-message {
-    margin: 0.75rem 0;
-    position: relative;
-}
-
-.bubble {
-    padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
-    max-width: 70%;
-    word-break: break-word;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.bubble-image {
-    max-width: 70%;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.bubble-audio {
-    max-width: 70%;
-    border-radius: 0.5rem;
-    background-color: white;
-    padding: 0.5rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    .audio-player {
-        flex: 1;
-        height: 32px;
-
-        &::-webkit-media-controls-panel {
-            background-color: transparent;
-        }
-        
-        &::-webkit-media-controls-play-button {
-            display: none;
-        }
-    }
-
-    .play-icon {
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #1890ff;
-        color: white;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 12px;
-    }
-}
-
-.user {
-    margin-left: auto;
-    background-color: #e6f7ff;
-    border: 1px solid #91d5ff;
-}
-
-.character {
-    margin-right: auto;
-    background-color: #ffffff;
-    border: 1px solid #e8e8e8;
-}
-
-.timestamp {
-    margin-top: 0.25rem;
-    text-align: right;
-}
-
-.user-message .timestamp {
-    padding-right: 0.5rem;
-}
-
-.character-message .timestamp {
-    text-align: left;
-    padding-left: 0.5rem;
+<style>
+/* All styles converted to Tailwind utility classes */
+:deep(.el-dialog__body) {
+    padding: 0;
 }
 </style>
