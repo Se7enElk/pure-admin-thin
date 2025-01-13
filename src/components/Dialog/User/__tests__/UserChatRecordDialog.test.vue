@@ -11,11 +11,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { vi } from "vitest";
 import UserChatRecordDialog from "../UserChatRecordDialog.vue";
 import { getCharacterChatRecord } from "@/api/character";
 
 const visible = ref(true);
-const characterId = ref(123);
+const characterId = ref("123");
 const userInfo = ref({
     id: 456,
     nick_name: "Test User",

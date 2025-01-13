@@ -26,15 +26,18 @@
                             用户
                         </div>
                         <div class="flex max-w-[70%] flex-col gap-2">
-                            <template
-                                v-for="(part, idx) in renderMixedContent(
-                                    item,
-                                    'input'
-                                )"
-                                :key="idx"
-                            >
-                                <component :is="part" />
-                            </template>
+                            <!-- User Text Content -->
+                            <div v-if="item.input" class="user-bubble">
+                                {{ item.input }}
+                            </div>
+
+                            <!-- User Image Content -->
+                            <img
+                                v-if="item.input_url"
+                                :src="item.input_url"
+                                :alt="'User Image'"
+                                class="max-w-[300px] rounded-xl ml-auto"
+                            />
                         </div>
                     </div>
                     <div class="mt-2 pr-14 text-right text-xs text-gray-400">
@@ -49,15 +52,36 @@
                             角色
                         </div>
                         <div class="flex max-w-[70%] flex-col gap-2">
-                            <template
-                                v-for="(part, idx) in renderMixedContent(
-                                    item,
-                                    'reply'
-                                )"
-                                :key="idx"
+                            <!-- Character Text Content -->
+                            <div v-if="item.reply" class="character-bubble">
+                                {{ item.reply }}
+                            </div>
+
+                            <!-- Character Image Content -->
+                            <img
+                                v-if="item.reply_url"
+                                :src="item.reply_url"
+                                :alt="'Character Image'"
+                                class="max-w-[300px] rounded-xl mr-auto"
+                            />
+
+                            <!-- Character Audio Content -->
+                            <div
+                                v-if="item.reply_tts_audio"
+                                class="flex max-w-[70%] items-center gap-2 rounded-xl bg-white p-3 shadow-sm mr-auto"
                             >
-                                <component :is="part" />
-                            </template>
+                                <audio
+                                    :id="`audio-${item.record_id}`"
+                                    :src="item.reply_tts_audio"
+                                    class="hidden"
+                                />
+                                <button
+                                    class="audio-button"
+                                    @click="toggleAudio(item.record_id)"
+                                >
+                                    播放语音
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="mt-2 pl-14 text-xs text-gray-400">
@@ -132,86 +156,17 @@ const hasCharacterContent = (item: ChatRecord): boolean => {
     return Boolean(item.reply || item.reply_url || item.reply_tts_audio);
 };
 
-const renderMixedContent = (item: ChatRecord, context: "input" | "reply") => {
-    const isReply = context === "reply";
-    const bubbleClass = isReply ? "character" : "user";
-
-    const contentWrapper = h("div", {
-        class: `flex flex-col gap-2 ${bubbleClass === "user" ? "ml-auto" : "mr-auto"}`
-    });
-
-    // Add text content if present
-    if (isReply ? item.reply : item.input) {
-        contentWrapper.children.push(
-            h(
-                "div",
-                {
-                    class: `w-full break-words rounded-xl p-3 shadow-sm ${
-                        bubbleClass === "user"
-                            ? "bg-[#f0f9ff] border border-[#e5f3ff]"
-                            : "bg-white border border-gray-200"
-                    }`
-                },
-                isReply ? item.reply : item.input
-            )
-        );
+const toggleAudio = (recordId: number) => {
+    const audio = document.querySelector(
+        `#audio-${recordId}`
+    ) as HTMLAudioElement;
+    if (audio) {
+        if (audio.paused) {
+            audio.play();
+        } else {
+            audio.pause();
+        }
     }
-
-    // Add image content if present
-    if (isReply ? item.reply_url : item.input_url) {
-        contentWrapper.children.push(
-            h("img", {
-                class: `max-w-[300px] rounded-xl ${
-                    bubbleClass === "user" ? "ml-auto" : "mr-auto"
-                }`,
-                src: isReply ? item.reply_url : item.input_url,
-                alt: isReply ? "Character Image" : "User Image"
-            })
-        );
-    }
-
-    // Add audio content if present (only for replies)
-    if (isReply && item.reply_tts_audio) {
-        contentWrapper.children.push(
-            h(
-                "div",
-                {
-                    class: `flex max-w-[70%] items-center gap-2 rounded-xl bg-white p-3 shadow-sm ${
-                        bubbleClass === "user" ? "ml-auto" : "mr-auto"
-                    }`
-                },
-                [
-                    h("audio", {
-                        src: item.reply_tts_audio,
-                        controls: true,
-                        class: "hidden",
-                        id: `audio-${item.record_id}`
-                    }),
-                    h(
-                        "button",
-                        {
-                            class: "flex items-center justify-center rounded-xl px-5 py-2.5 text-sm text-white bg-[#4096ff] hover:bg-[#4096ff]/90 transition-colors cursor-pointer shadow-sm",
-                            onClick: () => {
-                                const audio = document.querySelector(
-                                    `#audio-${item.record_id}`
-                                ) as HTMLAudioElement;
-                                if (audio) {
-                                    if (audio.paused) {
-                                        audio.play();
-                                    } else {
-                                        audio.pause();
-                                    }
-                                }
-                            }
-                        },
-                        "播放语音"
-                    )
-                ]
-            )
-        );
-    }
-
-    return [contentWrapper];
 };
 
 const getChatRecord = async () => {
@@ -242,7 +197,24 @@ const handleClose = () => {
 </script>
 
 <style>
-/* All styles converted to Tailwind utility classes */
+/* Common message bubble styles */
+.message-bubble {
+    @apply w-full break-words rounded-xl p-3 shadow-sm;
+}
+
+.user-bubble {
+    @apply message-bubble bg-[#f0f9ff] border border-[#e5f3ff];
+}
+
+.character-bubble {
+    @apply message-bubble bg-white border border-gray-200;
+}
+
+.audio-button {
+    @apply flex items-center justify-center rounded-xl px-5 py-2.5 text-sm text-white bg-[#4096ff] hover:bg-[#4096ff]/90 transition-colors cursor-pointer shadow-sm;
+}
+
+/* Element Plus overrides */
 :deep(.el-dialog__body) {
     padding: 0;
 }

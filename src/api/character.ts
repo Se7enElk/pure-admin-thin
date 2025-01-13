@@ -19,12 +19,31 @@ type AnyResult = {
 //     message: string;
 // };
 
+type MessageType = "TEXT" | "IMAGE" | "AUDIO";
+
+interface ChatRecord {
+    character_id: number;
+    input: string;
+    input_time: number;
+    input_type: MessageType;
+    input_url: string;
+    record_id: number;
+    reply: string;
+    reply_time: number;
+    reply_tts_audio: string;
+    reply_tts_audio_duration: number;
+    reply_type: MessageType;
+    reply_url: string;
+}
+
 type CharacterListResult = {
     success: boolean;
     status: number;
     data?: {
         /** 列表数据 */
-        content: Array<any>;
+        content?: Array<any>;
+        /** 聊天记录数据 */
+        record_list?: ChatRecord[];
         /** 总条目数 */
         total?: number;
         /** 总页数 */

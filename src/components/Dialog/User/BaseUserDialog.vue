@@ -53,6 +53,10 @@ const props = defineProps({
     },
     userInfo: {
         type: Object
+    },
+    characterId: {
+        type: [String, Number],
+        default: ""
     }
 });
 

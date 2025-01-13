@@ -214,13 +214,13 @@
 
         <user-chat-record-dialog
             v-model="chatDialog"
-            :user-info="userInfo"
+            :user-info="transformedUserInfo"
             :character-id="characterInfo.character_id"
         />
     </div>
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useCharacterDetail } from "./hooks";
 import Refresh from "@iconify-icons/ep/refresh";
@@ -266,6 +266,15 @@ const deleteDialog = ref(false);
 const recoverDialog = ref(false);
 const sortDialog = ref(false);
 const chatDialog = ref(false);
+
+const transformedUserInfo = computed(() => ({
+    ...userInfo.value,
+    id: Number(userInfo.value.uid),
+    uid: Number(userInfo.value.uid),
+    nick_name: userInfo.value.nick_name || "",
+    avatar: userInfo.value.avatar || "",
+    id_number: userInfo.value.id_number || ""
+}));
 const openDialog = (type?: string, row?: any) => {
     editRow.value = cloneDeep(characterInfo.value);
     switch (type) {
