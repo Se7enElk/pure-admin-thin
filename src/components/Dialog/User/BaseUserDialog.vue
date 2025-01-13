@@ -14,17 +14,21 @@
     >
         <!-- Dialog Header Info -->
         <div
-            class="flex justify-between items-start px-6 py-4 border-b border-gray-100"
+            class="flex justify-between items-start px-6 py-5 border-b border-gray-100"
         >
             <div class="flex flex-col">
-                <div class="text-base font-medium">角色名称</div>
-                <div class="text-sm text-gray-500 mt-1">
+                <div class="text-[15px] font-medium text-gray-900">
+                    角色名称
+                </div>
+                <div class="text-sm text-gray-500 mt-1.5">
                     角色ID: {{ characterId }}
                 </div>
             </div>
-            <div class="flex flex-col">
-                <div class="text-base font-medium">用户</div>
-                <div class="text-sm text-gray-500 mt-1">
+            <div class="flex flex-col items-end">
+                <div class="text-[15px] font-medium text-gray-900">
+                    {{ userInfo?.nick_name || "用户" }}
+                </div>
+                <div class="text-sm text-gray-500 mt-1.5">
                     UID: {{ userInfo?.id || userInfo?.uid }}
                 </div>
             </div>

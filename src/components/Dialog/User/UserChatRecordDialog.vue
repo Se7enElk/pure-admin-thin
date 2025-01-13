@@ -16,12 +16,12 @@
             <div
                 v-for="item in chatRecordData"
                 :key="item.record_id"
-                class="my-6 first:mt-0 last:mb-0"
+                class="my-8 first:mt-0 last:mb-0"
             >
-                <div v-if="hasUserContent(item)" class="relative my-3">
-                    <div class="flex flex-row-reverse items-start gap-4">
+                <div v-if="hasUserContent(item)" class="relative my-4">
+                    <div class="flex flex-row-reverse items-start gap-3">
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs text-gray-600"
+                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm text-gray-600 border border-blue-100"
                         >
                             用户
                         </div>
@@ -37,14 +37,14 @@
                             </template>
                         </div>
                     </div>
-                    <div class="mt-1 pr-2 text-right text-xs text-gray-400">
+                    <div class="mt-2 pr-14 text-right text-xs text-gray-400">
                         {{ formatTime(item.input_time) }}
                     </div>
                 </div>
-                <div v-if="hasCharacterContent(item)" class="relative my-3">
-                    <div class="flex items-start gap-4">
+                <div v-if="hasCharacterContent(item)" class="relative my-4">
+                    <div class="flex items-start gap-3">
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs text-gray-600"
+                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-50 text-sm text-gray-600 border border-gray-200"
                         >
                             角色
                         </div>
@@ -60,7 +60,7 @@
                             </template>
                         </div>
                     </div>
-                    <div class="mt-1 pl-2 text-xs text-gray-400">
+                    <div class="mt-2 pl-14 text-xs text-gray-400">
                         {{ formatTime(item.reply_time) }}
                     </div>
                 </div>
@@ -162,7 +162,7 @@ const renderMixedContent = (item: ChatRecord, context: "input" | "reply") => {
     if (isReply ? item.reply_url : item.input_url) {
         contentWrapper.children.push(
             h("img", {
-                class: `max-w-[70%] rounded-xl shadow-sm ${
+                class: `max-w-[300px] rounded-xl ${
                     bubbleClass === "user" ? "ml-auto" : "mr-auto"
                 }`,
                 src: isReply ? item.reply_url : item.input_url,
@@ -190,7 +190,7 @@ const renderMixedContent = (item: ChatRecord, context: "input" | "reply") => {
                     h(
                         "span",
                         {
-                            class: "flex items-center justify-center rounded px-4 py-2 text-sm text-white bg-blue-500 cursor-pointer"
+                            class: "flex items-center justify-center rounded-xl px-5 py-2.5 text-sm text-white bg-[#4096ff] hover:bg-[#4096ff]/90 transition-colors cursor-pointer"
                         },
                         "播放语音"
                     )
