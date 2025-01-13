@@ -358,7 +358,7 @@
 
         <user-chat-record-dialog
             v-model="chatRecordDialogVisible"
-            :user-info="editRow"
+            :user-info="{ ...editRow, id: Number(editRow.id) }"
             :character-id="chatRecordForm.character_id"
         />
 

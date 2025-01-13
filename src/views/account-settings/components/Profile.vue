@@ -21,14 +21,14 @@ const userInfoFormRef = ref<FormInstance>();
 
 const userInfos = reactive({
     avatar: "",
-    nickname: "",
+    nick_name: "",
     email: "",
     phone: "",
     description: ""
 });
 
 const rules = reactive<FormRules<UserInfo>>({
-    nickname: [{ required: true, message: "昵称必填", trigger: "blur" }]
+    nick_name: [{ required: true, message: "昵称必填", trigger: "blur" }]
 });
 
 function queryEmail(queryString, callback) {
@@ -138,7 +138,7 @@ getMine().then(res => {
             </el-form-item>
             <el-form-item label="昵称" prop="nickname">
                 <el-input
-                    v-model="userInfos.nickname"
+                    v-model="userInfos.nick_name"
                     placeholder="请输入昵称"
                 />
             </el-form-item>

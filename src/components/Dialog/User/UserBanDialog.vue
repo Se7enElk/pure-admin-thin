@@ -30,7 +30,7 @@
                         :key="item.value"
                         :label="item.name"
                         :value="item.value"
-                        class="!mr-0"
+                        class="!mr-0 w-full text-left block"
                         >{{ item.name }}</el-radio
                     >
                 </el-radio-group>
@@ -144,9 +144,6 @@ const handleSave = async () => {
 };
 </script>
 
-<style scoped lang="scss">
-:deep(.el-radio) {
-    width: 100%;
-    text-align: left;
-}
+<style>
+/* All styles converted to Tailwind utility classes */
 </style>

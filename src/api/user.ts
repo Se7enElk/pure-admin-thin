@@ -52,22 +52,24 @@ export type RefreshTokenResult = {
 };
 
 export type UserInfo = {
+    /** ID */
+    id: number;
     /** 头像 */
-    avatar: string;
+    avatar?: string;
     /** 用户名 */
-    user_name: string;
+    user_name?: string;
     /** 昵称 */
-    nick_name: string;
+    nick_name?: string;
     /** 邮箱 */
-    email: string;
+    email?: string;
     /** 联系电话 */
-    phone: string;
+    phone?: string;
     /** 简介 */
-    description: string;
+    description?: string;
     /** 权限 */
-    permissions: Array<string>;
+    permissions?: Array<string>;
     /** 角色 */
-    roles: Array<string>;
+    roles?: Array<string>;
 };
 
 export type UserInfoResult = {

@@ -28,10 +28,15 @@ onBeforeMount(() => {
     useDataThemeChange().dataThemeChange($storage.layout?.overallStyle);
 });
 
-const userInfo = ref({
+import type { UserInfo } from "@/api/user";
+
+interface LocalUserInfo extends UserInfo {}
+
+const userInfo = ref<LocalUserInfo>({
+    id: 0,
     avatar: "",
-    username: "",
-    nickname: ""
+    user_name: "",
+    nick_name: ""
 });
 const panes = [
     {
@@ -62,7 +67,13 @@ const panes = [
 const witchPane = ref("profile");
 
 getMine().then(res => {
-    userInfo.value = res.data;
+    userInfo.value = {
+        ...res.data,
+        id: Number(res.data.id),
+        user_name: res.data.user_name || "",
+        nick_name: res.data.nick_name || "",
+        avatar: res.data.avatar || ""
+    };
 });
 </script>
 
@@ -90,10 +101,10 @@ getMine().then(res => {
                     <el-avatar :size="48" :src="userInfo.avatar" />
                     <div class="ml-4 flex flex-col max-w-[130px]">
                         <ReText class="font-bold !self-baseline">
-                            {{ userInfo.nickname }}
+                            {{ userInfo.nick_name }}
                         </ReText>
                         <ReText class="!self-baseline" type="info">
-                            {{ userInfo.username }}
+                            {{ userInfo.user_name }}
                         </ReText>
                     </div>
                 </div>

@@ -13,7 +13,11 @@
         @save="handleClose"
     >
         <div class="grid grid-cols-3 gap-4">
-            <div v-for="item in photoData" :key="item.id" class="photo-item">
+            <div
+                v-for="item in photoData"
+                :key="item.id"
+                class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+            >
                 <el-image
                     :src="item.image_url"
                     :preview-src-list="[item.image_url]"
@@ -73,8 +77,6 @@ const handleClose = () => {
 };
 </script>
 
-<style scoped lang="scss">
-.photo-item {
-    @apply bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow;
-}
+<style>
+/* All styles converted to Tailwind utility classes */
 </style>

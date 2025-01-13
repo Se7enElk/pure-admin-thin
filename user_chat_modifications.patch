@@ -1,0 +1,480 @@
+diff --git a/src/components/Dialog/User/BaseUserDialog.vue b/src/components/Dialog/User/BaseUserDialog.vue
+index 8c40cf7..dcfe332 100644
+--- a/src/components/Dialog/User/BaseUserDialog.vue
++++ b/src/components/Dialog/User/BaseUserDialog.vue
+@@ -8,34 +8,34 @@
+     <el-dialog
+         v-model="dialogVisible"
+         :title="title"
+-        width="50%"
++        width="788px"
+         :before-close="handleClose"
++        class="chat-record-dialog"
+     >
+-        <!-- Common User Info Header -->
+-        <div v-if="userInfo" class="user-info ml-5">
+-            <img
+-                v-if="userInfo.avatar"
+-                class="w-[80px] h-[80px] rounded-full mr-4"
+-                :src="userInfo.avatar"
+-            />
+-            <div
+-                v-if="userInfo.id"
+-                class="flex flex-col text-sm text-gray-500 font-bold pt-3"
+-            >
+-                <p>用户昵称：{{ userInfo.nick_name }}</p>
+-                <p>用户ID：{{ userInfo.id_number }}</p>
+-                <p>UID：{{ userInfo.id }}</p>
++        <!-- Dialog Header Info -->
++        <div
++            class="flex justify-between items-start px-6 py-5 border-b border-gray-100"
++        >
++            <div class="flex flex-col">
++                <div class="text-[15px] font-medium text-gray-900">
++                    角色名称
++                </div>
++                <div class="text-sm text-gray-500 mt-1.5">
++                    角色ID: {{ characterId }}
++                </div>
++            </div>
++            <div class="flex flex-col items-end">
++                <div class="text-[15px] font-medium text-gray-900">
++                    {{ userInfo?.nick_name || "用户" }}
++                </div>
++                <div class="text-sm text-gray-500 mt-1.5">
++                    UID: {{ userInfo?.id || userInfo?.uid }}
++                </div>
+             </div>
+         </div>
+ 
+         <!-- Slot for dialog-specific content -->
+         <slot />
+-
+-        <!-- Common Footer -->
+-        <template #footer>
+-            <el-button @click="handleClose">取消</el-button>
+-            <el-button type="primary" @click="handleSave"> 保存 </el-button>
+-        </template>
+     </el-dialog>
+ </template>
+ 
+@@ -72,8 +72,6 @@ const handleSave = () => {
+ };
+ </script>
+ 
+-<style scoped lang="scss">
+-.user-info {
+-    display: flex;
+-}
++<style>
++/* All styles converted to Tailwind utility classes */
+ </style>
+diff --git a/src/components/Dialog/User/UserBanDialog.vue b/src/components/Dialog/User/UserBanDialog.vue
+index ebe5b84..cfd1480 100644
+--- a/src/components/Dialog/User/UserBanDialog.vue
++++ b/src/components/Dialog/User/UserBanDialog.vue
+@@ -30,7 +30,7 @@
+                         :key="item.value"
+                         :label="item.name"
+                         :value="item.value"
+-                        class="!mr-0"
++                        class="!mr-0 w-full text-left block"
+                         >{{ item.name }}</el-radio
+                     >
+                 </el-radio-group>
+@@ -144,9 +144,6 @@ const handleSave = async () => {
+ };
+ </script>
+ 
+-<style scoped lang="scss">
+-:deep(.el-radio) {
+-    width: 100%;
+-    text-align: left;
+-}
++<style>
++/* All styles converted to Tailwind utility classes */
+ </style>
+diff --git a/src/components/Dialog/User/UserChatRecordDialog.vue b/src/components/Dialog/User/UserChatRecordDialog.vue
+index dc6ad72..445ae7b 100644
+--- a/src/components/Dialog/User/UserChatRecordDialog.vue
++++ b/src/components/Dialog/User/UserChatRecordDialog.vue
+@@ -2,26 +2,103 @@
+  * @Author: Elk
+  * @Date: 2025-01-09 18:32:00
+  * @FilePath: /lemon9-admin/src/components/Dialog/User/UserChatRecordDialog.vue
+- * @Description: 
++ * @Description: Chat record dialog component
+ -->
+ <template>
+     <base-user-dialog
+         v-model="visible"
+         title="聊天记录"
+         :user-info="userInfo"
++        class="overflow-hidden"
+         @close="handleClose"
+-        @save="handleClose"
+     >
+-        <div v-for="item in chatRecordData" :key="item.id">
+-            <p>{{ item.content }}</p>
++        <div class="h-[60vh] px-6 py-4 overflow-y-auto bg-gray-50">
++            <div
++                v-for="item in chatRecordData"
++                :key="item.record_id"
++                class="my-8 first:mt-0 last:mb-0"
++            >
++                <div v-if="hasUserContent(item)" class="relative my-4">
++                    <div class="flex flex-row-reverse items-start gap-3">
++                        <div
++                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm text-gray-600 border border-blue-100"
++                        >
++                            用户
++                        </div>
++                        <div class="flex max-w-[70%] flex-col gap-2">
++                            <template
++                                v-for="(part, idx) in renderMixedContent(
++                                    item,
++                                    'input'
++                                )"
++                                :key="idx"
++                            >
++                                <component :is="part" />
++                            </template>
++                        </div>
++                    </div>
++                    <div class="mt-2 pr-14 text-right text-xs text-gray-400">
++                        {{ formatTime(item.input_time) }}
++                    </div>
++                </div>
++                <div v-if="hasCharacterContent(item)" class="relative my-4">
++                    <div class="flex items-start gap-3">
++                        <div
++                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-50 text-sm text-gray-600 border border-gray-200"
++                        >
++                            角色
++                        </div>
++                        <div class="flex max-w-[70%] flex-col gap-2">
++                            <template
++                                v-for="(part, idx) in renderMixedContent(
++                                    item,
++                                    'reply'
++                                )"
++                                :key="idx"
++                            >
++                                <component :is="part" />
++                            </template>
++                        </div>
++                    </div>
++                    <div class="mt-2 pl-14 text-xs text-gray-400">
++                        {{ formatTime(item.reply_time) }}
++                    </div>
++                </div>
++            </div>
+         </div>
+     </base-user-dialog>
+ </template>
+ 
+ <script setup lang="ts">
+-import { ref, computed, watch } from "vue";
++import { ref, computed, watch, h } from "vue";
+ import BaseUserDialog from "./BaseUserDialog.vue";
+ import { getCharacterChatRecord } from "@/api/character";
++import { formatTime } from "@/utils/format/time";
++
++type MessageType = "TEXT" | "IMAGE" | "AUDIO";
++
++interface ChatRecord {
++    character_id: number;
++    input: string;
++    input_time: number;
++    input_type: MessageType;
++    input_url: string;
++    record_id: number;
++    reply: string;
++    reply_time: number;
++    reply_tts_audio: string;
++    reply_tts_audio_duration: number;
++    reply_type: MessageType;
++    reply_url: string;
++}
++
++interface UserInfo {
++    id: number;
++    uid?: number;
++    nick_name?: string;
++    avatar?: string;
++    id_number?: string;
++}
+ 
+ const props = defineProps({
+     modelValue: {
+@@ -29,7 +106,7 @@ const props = defineProps({
+         required: true
+     },
+     userInfo: {
+-        type: Object,
++        type: Object as () => UserInfo,
+         required: true
+     },
+     characterId: {
+@@ -45,7 +122,85 @@ const visible = computed({
+     set: value => emit("update:modelValue", value)
+ });
+ 
+-const chatRecordData = ref([]);
++const chatRecordData = ref<ChatRecord[]>([]);
++
++const hasUserContent = (item: ChatRecord): boolean => {
++    return Boolean(item.input || item.input_url);
++};
++
++const hasCharacterContent = (item: ChatRecord): boolean => {
++    return Boolean(item.reply || item.reply_url || item.reply_tts_audio);
++};
++
++const renderMixedContent = (item: ChatRecord, context: "input" | "reply") => {
++    const nodes: any[] = [];
++    const isReply = context === "reply";
++    const bubbleClass = isReply ? "character" : "user";
++
++    const contentWrapper = h("div", {
++        class: `flex flex-col gap-2 ${bubbleClass === "user" ? "ml-auto" : "mr-auto"}`
++    });
++
++    // Add text content if present
++    if (isReply ? item.reply : item.input) {
++        contentWrapper.children.push(
++            h(
++                "div",
++                {
++                    class: `w-full break-words rounded-xl p-3 shadow-sm ${
++                        bubbleClass === "user"
++                            ? "bg-blue-50 border border-blue-200"
++                            : "bg-white border border-gray-200"
++                    }`
++                },
++                isReply ? item.reply : item.input
++            )
++        );
++    }
++
++    // Add image content if present
++    if (isReply ? item.reply_url : item.input_url) {
++        contentWrapper.children.push(
++            h("img", {
++                class: `max-w-[300px] rounded-xl ${
++                    bubbleClass === "user" ? "ml-auto" : "mr-auto"
++                }`,
++                src: isReply ? item.reply_url : item.input_url,
++                alt: isReply ? "Character Image" : "User Image"
++            })
++        );
++    }
++
++    // Add audio content if present (only for replies)
++    if (isReply && item.reply_tts_audio) {
++        contentWrapper.children.push(
++            h(
++                "div",
++                {
++                    class: `flex max-w-[70%] items-center gap-2 rounded-xl bg-white p-3 shadow-sm ${
++                        bubbleClass === "user" ? "ml-auto" : "mr-auto"
++                    }`
++                },
++                [
++                    h("audio", {
++                        src: item.reply_tts_audio,
++                        controls: true,
++                        class: "hidden"
++                    }),
++                    h(
++                        "span",
++                        {
++                            class: "flex items-center justify-center rounded-xl px-5 py-2.5 text-sm text-white bg-[#4096ff] hover:bg-[#4096ff]/90 transition-colors cursor-pointer"
++                        },
++                        "播放语音"
++                    )
++                ]
++            )
++        );
++    }
++
++    return [contentWrapper];
++};
+ 
+ const getChatRecord = async () => {
+     const params = {
+@@ -55,7 +210,7 @@ const getChatRecord = async () => {
+ 
+     const res = await getCharacterChatRecord(params);
+     if (res.status === 200) {
+-        chatRecordData.value = res.data.content;
++        chatRecordData.value = res.data.record_list;
+     }
+ };
+ 
+@@ -73,3 +228,10 @@ const handleClose = () => {
+     chatRecordData.value = [];
+ };
+ </script>
++
++<style>
++/* All styles converted to Tailwind utility classes */
++:deep(.el-dialog__body) {
++    padding: 0;
++}
++</style>
+diff --git a/src/components/Dialog/User/UserPhotoDialog.vue b/src/components/Dialog/User/UserPhotoDialog.vue
+index d6f3386..c5c68a1 100644
+--- a/src/components/Dialog/User/UserPhotoDialog.vue
++++ b/src/components/Dialog/User/UserPhotoDialog.vue
+@@ -13,7 +13,11 @@
+         @save="handleClose"
+     >
+         <div class="grid grid-cols-3 gap-4">
+-            <div v-for="item in photoData" :key="item.id" class="photo-item">
++            <div
++                v-for="item in photoData"
++                :key="item.id"
++                class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
++            >
+                 <el-image
+                     :src="item.image_url"
+                     :preview-src-list="[item.image_url]"
+@@ -73,8 +77,6 @@ const handleClose = () => {
+ };
+ </script>
+ 
+-<style scoped lang="scss">
+-.photo-item {
+-    @apply bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow;
+-}
++<style>
++/* All styles converted to Tailwind utility classes */
+ </style>
+diff --git a/src/components/Dialog/User/__tests__/UserChatRecordDialog.test.vue b/src/components/Dialog/User/__tests__/UserChatRecordDialog.test.vue
+new file mode 100644
+index 0000000..e3cc091
+--- /dev/null
++++ b/src/components/Dialog/User/__tests__/UserChatRecordDialog.test.vue
+@@ -0,0 +1,98 @@
++<template>
++    <div class="p-4">
++        <user-chat-record-dialog
++            v-model="visible"
++            :user-info="userInfo"
++            :character-id="characterId"
++        />
++        <el-button @click="visible = true">Open Dialog</el-button>
++    </div>
++</template>
++
++<script setup lang="ts">
++import { ref, onMounted } from "vue";
++import UserChatRecordDialog from "../UserChatRecordDialog.vue";
++import { getCharacterChatRecord } from "@/api/character";
++
++const visible = ref(true);
++const characterId = ref(123);
++const userInfo = ref({
++    id: 456,
++    nick_name: "Test User",
++    avatar: "https://placeholder.co/100",
++    id_number: "USER123"
++});
++
++// Mock data for testing different message combinations
++const mockData = {
++    status: 200,
++    data: {
++        record_list: [
++            {
++                character_id: 123,
++                input: "Hello, how are you?",
++                input_time: Date.now() / 1000,
++                input_type: "TEXT",
++                input_url: "",
++                record_id: 1,
++                reply: "I'm doing well! Here's a picture and some audio.",
++                reply_time: Date.now() / 1000 + 1,
++                reply_tts_audio: "https://example.com/audio.mp3",
++                reply_tts_audio_duration: 3,
++                reply_type: "TEXT",
++                reply_url: "https://placeholder.co/300"
++            },
++            {
++                character_id: 123,
++                input: "",
++                input_time: Date.now() / 1000 + 2,
++                input_type: "IMAGE",
++                input_url: "https://placeholder.co/300",
++                record_id: 2,
++                reply: "Nice picture!",
++                reply_time: Date.now() / 1000 + 3,
++                reply_tts_audio: "",
++                reply_tts_audio_duration: 0,
++                reply_type: "TEXT",
++                reply_url: ""
++            },
++            {
++                character_id: 123,
++                input: "Can you speak?",
++                input_time: Date.now() / 1000 + 4,
++                input_type: "TEXT",
++                input_url: "",
++                record_id: 3,
++                reply: "",
++                reply_time: Date.now() / 1000 + 5,
++                reply_tts_audio: "https://example.com/audio2.mp3",
++                reply_tts_audio_duration: 2,
++                reply_type: "AUDIO",
++                reply_url: ""
++            },
++            {
++                character_id: 123,
++                input: "Testing mixed content",
++                input_time: Date.now() / 1000 + 6,
++                input_type: "TEXT",
++                input_url: "https://placeholder.co/300",
++                record_id: 4,
++                reply: "Here's my mixed response with text, image, and audio!",
++                reply_time: Date.now() / 1000 + 7,
++                reply_tts_audio: "https://example.com/audio3.mp3",
++                reply_tts_audio_duration: 4,
++                reply_type: "TEXT",
++                reply_url: "https://placeholder.co/300"
++            }
++        ]
++    }
++};
++
++// Override the API function to return mock data
++const originalGetCharacterChatRecord = getCharacterChatRecord;
++getCharacterChatRecord = async () => mockData;
++
++onMounted(() => {
++    visible.value = true;
++});
++</script>
+diff --git a/src/utils/format/time.ts b/src/utils/format/time.ts
+new file mode 100644
+index 0000000..1bb5ae9
+--- /dev/null
++++ b/src/utils/format/time.ts
+@@ -0,0 +1,17 @@
++/**
++ * Format timestamp to localized date-time string
++ * @param timestamp Unix timestamp in seconds
++ * @returns Formatted date-time string in zh-CN locale
++ */
++export const formatTime = (timestamp: number): string => {
++    const date = new Date(timestamp * 1000);
++    return date.toLocaleString("zh-CN", {
++        year: "numeric",
++        month: "2-digit",
++        day: "2-digit",
++        hour: "2-digit",
++        minute: "2-digit",
++        second: "2-digit",
++        hour12: false
++    });
++};
