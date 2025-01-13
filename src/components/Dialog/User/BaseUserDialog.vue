@@ -8,8 +8,9 @@
     <el-dialog
         v-model="dialogVisible"
         :title="title"
-        width="50%"
+        width="788px"
         :before-close="handleClose"
+        class="chat-record-dialog"
     >
         <!-- Common User Info Header -->
         <div v-if="userInfo" class="user-info ml-5">
